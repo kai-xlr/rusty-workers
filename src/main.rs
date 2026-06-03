@@ -1,35 +1,32 @@
-mod counter;
-mod threadpool;
-
-use std::thread;
 use std::time::Duration;
-
-use threadpool::JobQueue;
+use worker_pool_v1::ThreadPool;
 
 fn main() {
-    println!("=== Task 1: Shared Counter ===\n");
-    counter::run_counter_demo();
+    println!("Initializing Worker Pool V1 (4 Workers)...");
 
-    println!("\n=== Task 2: Job Queue ===\n");
+    let mut pool = ThreadPool::new(4);
 
-    let queue = JobQueue::new();
+    println!("Dispatching 20 background compute jobs...");
 
-    for id in 0..10 {
-        queue.push(Box::new(move || {
-            println!("  Job {} says hello from {:?}", id, thread::current().id());
-        }));
+    for i in 0..20 {
+        pool.execute(move || {
+            println!(
+                "   -> Job {} starting on Thread {:?}",
+                i,
+                std::thread::current().id()
+            );
+
+            std::thread::sleep(Duration::from_millis(15));
+
+            println!("   <- Job {} completed", i);
+        });
     }
 
-    assert_eq!(queue.len(), 10);
+    println!(
+        "Initiating Explicit Graceful Shutdown. Waiting for workers to drain pipeline..."
+    );
 
-    while !queue.is_empty() {
-        if let Some(job) = queue.pop() {
-            job();
-        } else {
-            thread::sleep(Duration::from_millis(10));
-        }
-    }
+    pool.shutdown();
 
-    assert!(queue.is_empty());
-    println!("\nAll jobs completed successfully!");
+    println!("All threads successfully joined. Process exiting cleanly.");
 }

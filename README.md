@@ -1,17 +1,42 @@
-# Worker Pool v1
+# Worker Pool V1
 
-A multi-threaded worker pool / thread pool implementation in Rust.
+A multi-threaded thread pool implementation in Rust.
 
-## Current State
+Supports spawning a fixed set of worker threads that pull jobs from a shared
+message-passing channel, execute them concurrently, and shut down gracefully.
 
-- **`src/counter.rs`** — Shared counter demo using `Arc<Mutex<u64>>` across 10 threads
-- **`src/threadpool.rs`** — Thread-safe `JobQueue` backed by `Arc<Mutex<VecDeque>>`; queue type only, no thread pool yet
-- **`src/job.rs`** — Stub (job type definition)
-- **`src/worker.rs`** — Stub (worker thread logic)
-- **`src/main.rs`** — Runs counter demo then executes jobs sequentially on the main thread
+## Architecture
+
+- **`Job`** — Type alias for `Box<dyn FnOnce() + Send + 'static>`
+- **`Worker`** — Owns a single thread that loops on `receiver.recv()`, executing
+  each job until the channel is closed
+- **`ThreadPool`** — Manages a collection of `Worker`s and a `mpsc::Sender<Job>`
+  - `new(size)` — Creates `size` workers sharing a receiver via `Arc<Mutex<…>>`
+  - `execute(f)` — Boxes and sends a closure to the channel
+  - `shutdown()` — Drops the sender so workers break out of `recv()`, then joins
+    all threads
+  - `Drop` — Automatically calls `shutdown()`
+
+## Files
+
+| File | Purpose |
+|------|---------|
+| `src/lib.rs` | `Job`, `Worker`, `ThreadPool` definitions |
+| `src/main.rs` | Demo: dispatches 20 jobs to a 4-worker pool |
+| `tests/assignment_1.rs` | Job allocation & execution |
+| `tests/assignment_2.rs` | Single worker, sequential jobs |
+| `tests/assignment_3.rs` | Worker execute + clean shutdown |
+| `tests/assignment_4.rs` | 3 workers sharing one receiver |
+| `tests/assignment_5_6.rs` | ThreadPool executes 20 concurrent jobs |
 
 ## Build & Run
 
 ```bash
 cargo run
+```
+
+## Tests
+
+```bash
+cargo test
 ```
