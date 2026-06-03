@@ -1,46 +1,54 @@
-use std::collections::VecDeque;
+use std::sync::mpsc;
 use std::sync::{Arc, Mutex};
 
-type Job = Box<dyn FnOnce() + Send + 'static>;
+use crate::job::Job;
+use crate::worker::Worker;
 
-pub struct JobQueue {
-    inner: Arc<Mutex<VecDeque<Job>>>,
+pub struct ThreadPool {
+    workers: Vec<Worker>,
+    sender: Option<mpsc::Sender<Job>>,
 }
 
-impl JobQueue {
-    pub fn new() -> Self {
-        Self {
-            inner: Arc::new(Mutex::new(VecDeque::new())),
+impl ThreadPool {
+    pub fn new(size: usize) -> ThreadPool {
+        assert!(size > 0);
+
+        let (sender, receiver) = mpsc::channel::<Job>();
+        let receiver = Arc::new(Mutex::new(receiver));
+        let mut workers = Vec::with_capacity(size);
+
+        for id in 0..size {
+            workers.push(Worker::new(id, Arc::clone(&receiver)));
+        }
+        ThreadPool {
+            workers,
+            sender: Some(sender),
         }
     }
 
-    pub fn push(&self, job: Job) {
-        self.inner.lock().unwrap().push_back(job);
+    pub fn execute<F>(&self, f: F)
+    where
+        F: FnOnce() + Send + 'static,
+    {
+        let job: Job = Box::new(f);
+        self.sender.as_ref().unwrap().send(job).unwrap();
     }
 
-    pub fn pop(&self) -> Option<Job> {
-        self.inner.lock().unwrap().pop_front()
-    }
+    pub fn shutdown(&mut self) {
+        if self.sender.is_some() {
+            drop(self.sender.take());
 
-    pub fn len(&self) -> usize {
-        self.inner.lock().unwrap().len()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.inner.lock().unwrap().is_empty()
-    }
-}
-
-impl Default for JobQueue {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl Clone for JobQueue {
-    fn clone(&self) -> Self {
-        Self {
-            inner: Arc::clone(&self.inner),
+            for worker in &mut self.workers {
+                if let Some(thread) = worker.thread.take() {
+                    thread.join().unwrap();
+                }
+            }
         }
+    }
+}
+
+impl Drop for ThreadPool {
+    fn drop(&mut self) {
+        self.shutdown();
     }
 }
