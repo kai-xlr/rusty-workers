@@ -23,11 +23,11 @@ message-passing channel, execute them concurrently, and shut down gracefully.
 |------|---------|
 | `src/lib.rs` | `Job`, `Worker`, `ThreadPool` definitions |
 | `src/main.rs` | Demo: dispatches 20 jobs to a 4-worker pool |
-| `tests/assignment_1.rs` | Job allocation & execution |
-| `tests/assignment_2.rs` | Single worker, sequential jobs |
-| `tests/assignment_3.rs` | Worker execute + clean shutdown |
-| `tests/assignment_4.rs` | 3 workers sharing one receiver |
-| `tests/assignment_5_6.rs` | ThreadPool executes 20 concurrent jobs |
+| `tests/job_allocation.rs` | Job allocation & execution |
+| `tests/single_worker_channel.rs` | Single worker, sequential jobs |
+| `tests/worker_clean_shutdown.rs` | Worker execute + clean shutdown |
+| `tests/multi_worker_pipeline.rs` | 3 workers sharing one receiver |
+| `tests/thread_pool_concurrent.rs` | ThreadPool executes 20 concurrent jobs |
 
 ## Build & Run
 
