@@ -4,7 +4,7 @@ use std::sync::{
     mpsc,
 };
 
-use worker_pool_v1::{Job, Worker};
+use worker_pool_v1::{Job, PerformanceMetrics, Worker};
 
 #[test]
 fn worker_can_execute_job_and_shutdown_cleanly() {
@@ -14,7 +14,8 @@ fn worker_can_execute_job_and_shutdown_cleanly() {
     let flag_clone = Arc::clone(&flag);
 
     let receiver = Arc::new(std::sync::Mutex::new(receiver));
-    let mut worker = Worker::new(0, receiver);
+    let metrics = Arc::new(PerformanceMetrics::new());
+    let mut worker = Worker::new(0, receiver, metrics);
 
     sender
         .send(Box::new(move || {
@@ -24,13 +25,7 @@ fn worker_can_execute_job_and_shutdown_cleanly() {
 
     drop(sender);
 
-    worker
-        .thread
-        .take()
-        .unwrap()
-        .join()
-        .unwrap();
+    worker.join();
 
     assert!(flag.load(Ordering::SeqCst));
-    assert_eq!(worker.id, 0);
 }

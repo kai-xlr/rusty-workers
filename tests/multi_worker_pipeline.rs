@@ -1,5 +1,5 @@
 use std::sync::{Arc, Mutex, mpsc};
-use worker_pool_v1::{Job, Worker};
+use worker_pool_v1::{Job, PerformanceMetrics, Worker};
 
 #[test]
 fn multiple_workers_share_single_receiver_pipeline() {
@@ -7,11 +7,12 @@ fn multiple_workers_share_single_receiver_pipeline() {
 
     let (sender, receiver) = mpsc::channel::<Job>();
     let receiver = Arc::new(Mutex::new(receiver));
+    let metrics = Arc::new(PerformanceMetrics::new());
 
     let mut workers = Vec::new();
 
     for id in 0..3 {
-        workers.push(Worker::new(id, Arc::clone(&receiver)));
+        workers.push(Worker::new(id, Arc::clone(&receiver), Arc::clone(&metrics)));
     }
 
     for value in [10usize, 20, 30] {
@@ -28,9 +29,7 @@ fn multiple_workers_share_single_receiver_pipeline() {
     drop(sender);
 
     for worker in &mut workers {
-        if let Some(handle) = worker.thread.take() {
-            handle.join().unwrap();
-        }
+        worker.join();
     }
 
     let mut actual = results.lock().unwrap().clone();
