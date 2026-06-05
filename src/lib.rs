@@ -33,7 +33,10 @@ mod tests {
 
         pool.shutdown();
 
-        assert!(flag.load(Ordering::SeqCst), "The background job failed to execute and set the flag.");
+        assert!(
+            flag.load(Ordering::SeqCst),
+            "The background job failed to execute and set the flag."
+        );
     }
 
     #[test]
@@ -52,8 +55,16 @@ mod tests {
 
         pool.shutdown();
 
-        assert_eq!(*counter.lock().unwrap(), total_jobs, "High volume task aggregation mismatch.");
-        assert_eq!(pool.jobs_completed(), total_jobs, "Telemetry metrics failed to match executed task counts.");
+        assert_eq!(
+            *counter.lock().unwrap(),
+            total_jobs,
+            "High volume task aggregation mismatch."
+        );
+        assert_eq!(
+            pool.jobs_completed(),
+            total_jobs,
+            "Telemetry metrics failed to match executed task counts."
+        );
     }
 
     #[test]
@@ -68,7 +79,10 @@ mod tests {
         pool.shutdown();
         let duration = start.elapsed();
 
-        assert!(duration < Duration::from_millis(200), "Shutdown blocked the runtime for too long.");
+        assert!(
+            duration < Duration::from_millis(200),
+            "Shutdown blocked the runtime for too long."
+        );
     }
 
     #[test]

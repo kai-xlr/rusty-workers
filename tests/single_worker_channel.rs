@@ -1,6 +1,6 @@
-use worker_pool_v1::Job;
 use std::sync::{Arc, Mutex, mpsc};
 use std::thread;
+use worker_pool_v1::Job;
 
 #[test]
 fn single_worker_thread_executes_sequential_jobs() {

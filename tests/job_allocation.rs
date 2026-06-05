@@ -1,5 +1,5 @@
-use worker_pool_v1::Job;
 use std::sync::{Arc, Mutex};
+use worker_pool_v1::Job;
 
 #[test]
 fn job_can_be_allocated_and_executed() {
@@ -15,5 +15,8 @@ fn job_can_be_allocated_and_executed() {
     job();
 
     let final_state = *executed_flag.lock().unwrap();
-    assert!(final_state, "The job did not mutate the shared state successfully.");
+    assert!(
+        final_state,
+        "The job did not mutate the shared state successfully."
+    );
 }

@@ -24,7 +24,8 @@ impl PerformanceMetrics {
     }
 
     pub fn add_runtime(&self, micros: u64) {
-        self.total_runtime_micros.fetch_add(micros, Ordering::Relaxed);
+        self.total_runtime_micros
+            .fetch_add(micros, Ordering::Relaxed);
     }
 
     pub fn jobs_submitted(&self) -> usize {

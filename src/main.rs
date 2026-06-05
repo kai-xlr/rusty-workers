@@ -22,9 +22,7 @@ fn main() {
         });
     }
 
-    println!(
-        "Initiating Explicit Graceful Shutdown. Waiting for workers to drain pipeline..."
-    );
+    println!("Initiating Explicit Graceful Shutdown. Waiting for workers to drain pipeline...");
 
     pool.shutdown();
 
