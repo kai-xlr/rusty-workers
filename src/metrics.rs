@@ -6,6 +6,12 @@ pub struct PerformanceMetrics {
     total_runtime_micros: AtomicU64,
 }
 
+impl Default for PerformanceMetrics {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PerformanceMetrics {
     pub fn new() -> Self {
         Self {
@@ -39,11 +45,7 @@ impl PerformanceMetrics {
     pub fn pending_jobs(&self) -> usize {
         let submitted = self.jobs_submitted.load(Ordering::Relaxed);
         let completed = self.jobs_completed.load(Ordering::Relaxed);
-        if submitted > completed {
-            submitted - completed
-        } else {
-            0
-        }
+        submitted.saturating_sub(completed)
     }
 
     pub fn average_runtime_ms(&self) -> f64 {

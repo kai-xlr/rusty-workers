@@ -34,10 +34,9 @@ impl Worker {
     }
 
     pub fn join(&mut self) {
-        if let Some(thread) = self.thread.take() {
-            if let Err(e) = thread.join() {
+        if let Some(thread) = self.thread.take()
+            && let Err(e) = thread.join() {
                 std::panic::resume_unwind(e);
             }
-        }
     }
 }
